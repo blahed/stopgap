@@ -1,17 +1,19 @@
 require 'fileutils'
+require 'listen'
 
 module Stopgap
   class CLI
     BANNER = <<~USAGE
-    Usage:
-      stopgap new PATH
-      stopgap console PATH
-    Description:
-      Little database playground, napkin, slate, etc.
-    Example:
-      stopgap new playdabase
-      cd playdabase
-      stopgap c
+      Usage:
+        stopgap new PATH
+        stopgap console PATH
+      Description:
+        Little database playground, napkin, slate, etc.
+      Example:
+        stopgap new playdabase
+        cd playdabase
+        # Edit your schema.rb
+        stopgap console
     USAGE
 
     def self.run
@@ -21,7 +23,7 @@ module Stopgap
       when 'new', 'n'
         init
       when 'console', 'c'
-        start_console
+        Console.start
       else
         puts BANNER
         exit
@@ -29,33 +31,20 @@ module Stopgap
     end
 
     def self.init
-      name    = ARGV.first
-      example = <<~EXAMPLE
-      Stopgap.schema(:#{name.split('/').last}) do
+      path          = ARGV.first
+      schema_path   = File.join(path, 'schema.rb')
+      database_name = path.split('/').last
+      template_path = File.expand_path('../../template', __FILE__)
 
-        table :users, populate: 25 do |t|
-          t.string "name", value: -> { Faker::Name.name }
-          t.integer "age", value: 1..25
-          t.string "sex", value: ['male', 'female']
-          t.integer "company_id", value: 1..5
-        end
+      FileUtils.cp_r(template_path, path)
 
-        table :companies, populate: 5 do |t|
-          t.string "name", value: -> { Faker::Company.name }
-          t.string "ein", value: -> { Faker::Company.ein }
-        end
-      end
-      EXAMPLE
+      schema = File.read(schema_path)
 
-      FileUtils.mkdir_p(name)
+      File.open(schema_path, 'w') { |file| file.write schema.gsub('{{database}}', ":#{database_name}") }
 
-      File.open("#{name}/schema.rb", 'w') do |file|
-        file.write(example)
-      end
-    end
-
-    def self.start_console
-      IRB.start('schema.rb')
+      puts "\033[32mStopgap created...\033[0m"
+      puts "  1. `cd #{path} && bundle install', then edit your schema.rb to get started"
+      puts "  2. `stopgap console' to start your console and run queries"
     end
   end
 end

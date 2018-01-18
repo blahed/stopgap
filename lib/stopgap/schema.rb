@@ -1,6 +1,10 @@
 module Stopgap
   class Schema
 
+    class << self
+      attr_accessor :current
+    end
+
     def initialize(database)
       @database  = database
       @adapter   = 'postgresql'
@@ -67,6 +71,13 @@ module Stopgap
 
     def populate
       @tables.each do |table|
+        table.populate
+      end
+    end
+
+    def reload!
+      @tables.each do |table|
+        table.drop!
         table.populate
       end
     end

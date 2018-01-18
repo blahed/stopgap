@@ -3,6 +3,7 @@
 require 'irb'
 require 'bundler/setup'
 require 'stopgap'
+require 'listen'
 
 # You can add fixtures and/or initialization code here to make experimenting
 # with your gem easier. You can also use a different console, if you like.
@@ -15,19 +16,11 @@ def sql(statement)
   ActiveRecord::Base.connection.execute(statement).values
 end
 
-Stopgap.schema(:playdabase) do
-
-  table :users, populate: 25 do |t|
-    t.string "name", value: -> { Faker::Name.name }
-    t.integer "age", value: 1..25
-    t.string "sex", value: ['male', 'female']
-    t.integer "company_id", value: 1..5
-  end
-
-  table :companies, populate: 5 do |t|
-    t.string "name", value: -> { Faker::Company.name }
-    t.string "ein", value: -> { Faker::Company.ein }
-  end
+listener = Listen.to('lib') do |modified, added, removed|
+  print "\rSchema changed, updating db...   \n"
+  $stdout.flush
+  print IRB.conf[:PROMPT][IRB.conf[:PROMPT_MODE]][:PROMPT_I]
 end
+listener.start
 
 IRB.start(__FILE__)

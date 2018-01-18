@@ -4,9 +4,5 @@ $:.unshift File.join(File.dirname(__FILE__), *%w[.. lib])
 require 'irb'
 require 'stopgap'
 
-def sql(statement)
-  ActiveRecord::Base.connection.execute(statement).values
-end
-
 Stopgap::CLI.run
 

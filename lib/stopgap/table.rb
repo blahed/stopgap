@@ -8,6 +8,10 @@ module Stopgap
       ActiveRecord::Base.connection.create_table(name)
     end
 
+    def drop!
+      ActiveRecord::Base.connection.drop_table(name, cascade: true)
+    end
+
     def populate
       placeholders = "(#{Array.new(@populators.length, '?').join(',')})"
       columns = @populators.keys.join(',')

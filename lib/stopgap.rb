@@ -1,8 +1,7 @@
-require 'pg'
 require 'active_record'
-require 'faker'
 
 require 'stopgap/version'
+require 'stopgap/console'
 require 'stopgap/cli'
 require 'stopgap/table'
 require 'stopgap/schema'
@@ -13,5 +12,7 @@ module Stopgap
 
     schema.instance_eval(&block)
     schema.populate
+
+    Schema.current = schema
   end
 end

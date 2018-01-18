@@ -5,13 +5,13 @@ Stopgap is a simple tool that allows you to build a database playground–think 
 Here's an example of how easy it is to get started with a schema, and populate it with data:
 
 ```ruby
-Stopgap.schema(:playdabase) do
+Stopgap.schema :playdabase do
 
   table :users, populate: 25 do |t|
     t.string :name, value: -> { Faker::Name.name }
     t.integer :age, value: 1..25
     t.string :sex, value: ['male', 'female']
-    t.integer :company_id, value: 1..5
+    t.reference :company, value: 1..5
   end
 
   table :companies, populate: 5 do |t|
