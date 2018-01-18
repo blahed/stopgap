@@ -5,6 +5,8 @@ module Stopgap
       attr_accessor :current
     end
 
+    attr_reader :database, :adapter, :host, :username, :password, :tables
+
     def initialize(database)
       @database  = database
       @adapter   = 'postgresql'
@@ -43,7 +45,6 @@ module Stopgap
     rescue ActiveRecord::NoDatabaseError
       false
     else
-
       true
     end
 
@@ -61,23 +62,25 @@ module Stopgap
     end
 
     def table(name, options = {}, &block)
-      connect! unless connected?
-
       table = Table.new(name, options)
 
       table.instance_eval(&block)
       @tables << table
     end
 
-    def populate
+    def load
+      connect! unless connected?
+
       @tables.each do |table|
+        table.create
         table.populate
       end
     end
 
-    def reload!
+    def reload
       @tables.each do |table|
         table.drop!
+        table.create
         table.populate
       end
     end

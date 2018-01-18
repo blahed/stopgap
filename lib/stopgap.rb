@@ -11,7 +11,6 @@ module Stopgap
     schema = Schema.new(database)
 
     schema.instance_eval(&block)
-    schema.populate
 
     Schema.current = schema
   end

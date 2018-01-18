@@ -9,10 +9,14 @@ module Stopgap
     end
 
     def initialize
+      load 'schema.rb'
+      Schema.current.load
+
       listener = Listen.to('.', only: /\.rb\z/, relative: true) do |modified, added, removed|
         print "\rSchema changed, updating db...   \n"
         $stdout.flush
-        Schema.current.reload!
+        load 'schema.rb'
+        Schema.current.reload
         print PROMPT.first.call
       end
 
@@ -30,7 +34,14 @@ module Stopgap
     def commands
       command_set = Pry::CommandSet.new do
         command 'sql', 'Execute a SQL query' do |statement|
-          ActiveRecord::Base.connection.execute(statement).values
+          result = ActiveRecord::Base.connection.execute(statement)
+
+          output.puts result.fields
+          output.puts result.values
+        end
+
+        command 'dbconsole', 'Open the database console' do |statement|
+          system "psql #{Stopgap::Schema.current.database}"
         end
 
         command 'help', 'Show a list of commands' do

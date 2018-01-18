@@ -1,11 +1,24 @@
 module Stopgap
   class Table
+    attr_accessor :name, :columns, :references, :populate_count
+
     def initialize(name, options = {})
       @name           = name
+      @columns        = {}
+      @references     = {}
       @populate_count = options[:populate] || 0
-      @populators     = {}
+    end
 
+    def create
       ActiveRecord::Base.connection.create_table(name)
+
+      columns.each do |column, attributes|
+        ActiveRecord::Base.connection.add_column(name, column, attributes[:type], attributes[:options])
+      end
+
+      references.each do |reference, attributes|
+        ActiveRecord::Base.connection.add_reference(name, reference, attributes[:options])
+      end
     end
 
     def drop!
@@ -13,37 +26,54 @@ module Stopgap
     end
 
     def populate
-      placeholders = "(#{Array.new(@populators.length, '?').join(',')})"
-      columns = @populators.keys.join(',')
+      populatables = columns.reject {|_, c| c[:value].nil? }
 
-      @populate_count.times do
-        values = @populators.values.map do |val|
-          case val
+      references.each do |reference, attributes|
+        populatables["#{reference}_id"] = attributes unless attributes[:value].nil?
+      end
+
+      placeholders = "(#{Array.new(populatables.length, '?').join(',')})"
+      column_names = populatables.keys.join(',')
+
+      populate_count.times do
+        values = populatables.values.map do |column|
+          value = column[:value]
+          case value
           when Array
-            val.sample
+            value.sample
           when Range
-            rand(val)
+            rand(value)
           when Proc
-            val.call
+            value.call
           else
-            val
+            value
           end
         end
 
-        statement = ActiveRecord::Base.send(:sanitize_sql_array, ["INSERT INTO #{@name} (#{columns}) VALUES #{placeholders}"].concat(values))
+        statement = ActiveRecord::Base.send(:sanitize_sql_array, ["INSERT INTO #{name} (#{column_names}) VALUES #{placeholders}"].concat(values))
 
         ActiveRecord::Base.connection.execute(statement)
       end
     end
 
-    %i[string text integer float decimal datetime timestamp time date binary boolean].each do |type|
+    %i[string text integer float decimal datetime timestamp time date binary boolean reference].each do |type|
       define_method(type) do |*args|
-        column              = args.shift
-        options             = args.empty? ? {} : args.shift
-        @populators[column] = options.delete(:value) if options.has_key?(:value)
+        column  = args.shift
+        options = args.empty? ? {} : args.shift
 
-        ActiveRecord::Base.connection.add_column(@name, column, type, options)
+        columns[column] = {
+          type: type,
+          options: options,
+          value: options.delete(:value)
+        }
       end
+    end
+
+    def reference(name, options = {})
+      references[name] = {
+        options: options,
+        value: options.delete(:value)
+      }
     end
 
   end

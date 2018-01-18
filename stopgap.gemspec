@@ -4,7 +4,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'stopgap/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'Stopgap'
+  spec.name          = 'stopgap'
   spec.version       = Stopgap::VERSION
   spec.authors       = ['blahed']
   spec.email         = ['trvsdnn@gmail.com']
