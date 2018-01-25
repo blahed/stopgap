@@ -1,5 +1,7 @@
 require 'fileutils'
+
 require 'listen'
+require 'terminal-table'
 
 module Stopgap
   class CLI
@@ -41,10 +43,11 @@ module Stopgap
 
       FileUtils.cp_r(template_path, path)
 
-      schema = File.read(schema_path)
+      schema  = File.read(schema_path)
+      gemfile = File.read(gemfile_path)
 
       File.open(schema_path, 'w') { |file| file.write schema.gsub('{{database}}', ":#{database_name}") }
-      File.open(gemfile_path, 'w') { |file| file.write schema.gsub('{{version}}', "#{::Stopgap::VERSION}") }
+      File.open(gemfile_path, 'w') { |file| file.write gemfile.gsub('{{version}}', "#{Stopgap::VERSION}") }
 
       puts "\033[32mStopgap created...\033[0m"
       puts "  1. `cd #{path} && bundle install', then edit your schema.rb to get started"

@@ -94,9 +94,9 @@ module Stopgap
     private
 
     def silenced(&block)
-      ::ActiveRecord::Base.logger = nil
+      ActiveRecord::Base.logger = nil
       block.call
-      ::ActiveRecord::Base.logger = ::Stopgap.logger
+      ActiveRecord::Base.logger = Stopgap.logger
     end
 
   end

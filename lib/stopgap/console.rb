@@ -62,21 +62,32 @@ module Stopgap
     def commands
       command_set = Pry::CommandSet.new do
         command 'sql', 'Execute a SQL query' do |statement|
-          result = ActiveRecord::Base.connection.execute(statement)
+          ActiveRecord::Base.logger = nil
+          result                    = ActiveRecord::Base.connection.execute(statement)
+          ActiveRecord::Base.logger = Stopgap.logger
 
-          output.puts result.fields
-          output.puts result.values
+          table = Terminal::Table.new do |t|
+            t << result.fields
+            t << :separator
+            result.values.each { |v| t << v }
+          end
+
+          puts table
         end
 
-        command 'dbconsole', 'Open the database console' do |statement|
+        command 'dbconsole', "Open the database console" do
           Stopgap::Console.start_dbconsole
         end
 
-        command 'help', 'Show a list of commands' do
+        command 'edit', "Open schema in editor set by ENV['editor']" do
+          system "#{ENV['EDITOR'] || 'nano'} schema.rb"
+        end
+
+        command 'help', "Show a list of commands" do
           commands.each { |key, command| puts "  #{key.ljust(18)} #{command.description.capitalize}" }
         end
 
-        command 'exit', 'Exit the Stopgap console' do
+        command 'exit', "Exit the Stopgap console" do
           exit
         end
       end

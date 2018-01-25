@@ -33,6 +33,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'activerecord', '~> 5.1.4'
   spec.add_dependency 'pry', '~> 0.11.3'
   spec.add_dependency 'listen', '~> 3.1'
+  spec.add_dependency 'terminal-table', '~> 1.8'
 
   spec.add_development_dependency 'bundler', '~> 1.16'
   spec.add_development_dependency 'rake', '~> 10.0'
