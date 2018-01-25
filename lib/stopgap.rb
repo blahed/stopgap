@@ -7,6 +7,12 @@ require 'stopgap/table'
 require 'stopgap/schema'
 
 module Stopgap
+  class LogFormatter < Logger::Formatter
+    def call(severity, time, progname, msg)
+      "#{msg2str(msg)}\n"
+    end
+  end
+
   def self.schema(database, &block)
     schema = Schema.new(database)
 
@@ -14,4 +20,10 @@ module Stopgap
 
     Schema.current = schema
   end
+
+  def self.logger
+    @logger ||= Logger.new(STDOUT, formatter: LogFormatter.new)
+  end
 end
+
+ActiveRecord::Base.logger = Stopgap.logger

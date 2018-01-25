@@ -49,12 +49,14 @@ module Stopgap
     end
 
     def connect!
-      ActiveRecord::Base.establish_connection(config.merge(database: 'postgres'))
+      silenced do
+        ActiveRecord::Base.establish_connection(config.merge(database: 'postgres'))
 
-      ActiveRecord::Base.connection.drop_database(config[:database]) if exists?
-      ActiveRecord::Base.connection.create_database(config[:database])
-      ActiveRecord::Base.remove_connection
-      ActiveRecord::Base.establish_connection(config)
+        ActiveRecord::Base.connection.drop_database(config[:database]) if exists?
+        ActiveRecord::Base.connection.create_database(config[:database])
+        ActiveRecord::Base.remove_connection
+        ActiveRecord::Base.establish_connection(config)
+      end
     end
 
     def connected?
@@ -71,18 +73,30 @@ module Stopgap
     def load
       connect! unless connected?
 
-      @tables.each do |table|
-        table.create
-        table.populate
+      silenced do
+        @tables.each do |table|
+          table.create
+          table.populate
+        end
       end
     end
 
     def reload
-      @tables.each do |table|
-        table.drop!
-        table.create
-        table.populate
+      silenced do
+        @tables.each do |table|
+          table.drop!
+          table.create
+          table.populate
+        end
       end
+    end
+
+    private
+
+    def silenced(&block)
+      ::ActiveRecord::Base.logger = nil
+      block.call
+      ::ActiveRecord::Base.logger = ::Stopgap.logger
     end
 
   end
