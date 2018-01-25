@@ -70,6 +70,19 @@ module Stopgap
       @tables << table
     end
 
+    def join_table(table_1, table_2, column_options = {}, options = {}, &block)
+      column_options.reverse_merge!(null: false, index: false)
+
+      table = table([table_1, table_2].sort.join('_'), options.merge!(id: false)) do |td|
+        td.references table_1.to_s.singularize, column_options
+        td.references table_2.to_s.singularize, column_options
+
+        yield td if block_given?
+      end
+
+      @tables << table
+    end
+
     def load
       connect! unless connected?
 

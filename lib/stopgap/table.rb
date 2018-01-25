@@ -1,11 +1,10 @@
 module Stopgap
   class Table
-    attr_accessor :name, :columns, :references, :populate_count
+    attr_accessor :name, :columns, :populate_count
 
     def initialize(name, options = {})
       @name           = name
       @columns        = {}
-      @references     = {}
       @populate_count = options[:populate] || 0
     end
 
@@ -29,7 +28,10 @@ module Stopgap
       populatables = columns.reject {|_, c| c[:value].nil? }
 
       references.each do |reference, attributes|
-        populatables["#{reference}_id"] = attributes unless attributes[:value].nil?
+        table = Stopgap::Schema.current.tables.find {|t| t.name == reference }
+        # raise SchemaError
+        id = rand(0..table.populate_count)
+        populatables["#{reference}_id"] = id unless id.zero?
       end
 
       placeholders = "(#{Array.new(populatables.length, '?').join(',')})"
@@ -56,7 +58,7 @@ module Stopgap
       end
     end
 
-    %i[string text integer float decimal datetime timestamp time date binary boolean reference].each do |type|
+    %i[string text integer float decimal datetime timestamp time date binary boolean references].each do |type|
       define_method(type) do |*args|
         column  = args.shift
         options = args.empty? ? {} : args.shift
@@ -67,13 +69,6 @@ module Stopgap
           value: options.delete(:value)
         }
       end
-    end
-
-    def reference(name, options = {})
-      references[name] = {
-        options: options,
-        value: options.delete(:value)
-      }
     end
 
   end
