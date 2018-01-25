@@ -11,13 +11,13 @@ module Stopgap
     def initialize
       load 'schema.rb'
       Schema.current.load
+      Dir['models/*.rb'].each { |p| load p }
 
       listener = Listen.to('.', only: /\.rb\z/, relative: true) do |modified, added, removed|
-        print "\rSchema changed, updating db...   \n"
-        $stdout.flush
+        print "\a"
         load 'schema.rb'
+        Dir['models/*.rb'].each { |p| load p }
         Schema.current.reload
-        print PROMPT.first.call
       end
 
       listener.start
