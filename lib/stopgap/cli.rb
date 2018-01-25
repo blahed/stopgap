@@ -24,6 +24,8 @@ module Stopgap
         init
       when 'console', 'c'
         Console.start
+      when 'model', 'm'
+        generate_model
       else
         puts BANNER
         exit
@@ -47,6 +49,19 @@ module Stopgap
       puts "\033[32mStopgap created...\033[0m"
       puts "  1. `cd #{path} && bundle install', then edit your schema.rb to get started"
       puts "  2. `stopgap console' to start your console and run queries"
+    end
+
+    def self.generate_model
+      name = ARGV.first
+      path = File.join('models', "#{name}.rb")
+
+      if File.exists? path
+        puts "Model already exists at path `#{path}'"
+      else
+        File.open(path, 'w') do |file|
+          file.write "class #{name.sub(/^[a-z\d]*/) { $&.capitalize }} < ActiveRecord::Base\nend"
+        end
+      end
     end
   end
 end
